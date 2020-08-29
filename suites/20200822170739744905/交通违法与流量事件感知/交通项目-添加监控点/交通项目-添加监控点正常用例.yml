@@ -1,0 +1,41 @@
+- config:
+    name: 交通项目-添加监控点正常用例
+    request:
+      base_url: http://172.16.1.107:9088
+- test:
+    extract:
+    - token: content.data
+    name: 交通项目-正常账号密码登录
+    request:
+      json:
+        password: 1cd73874884db6a0f9f21d853d7e9eacdc773c39ee389060f5e96ae0bcb4773a
+        username: admin
+      method: POST
+      url: api_traffic/user/login
+    validate:
+    - check: content.code
+      comparator: equals
+      expected: 0
+- test:
+    name: 交通项目-添加监控点正常用例
+    request:
+      headers:
+        Content-Type: application/json;charset=UTF-8
+        keensense-traffic-token: ${token}
+      json:
+        cameratype: 2
+        crossingNumber: '111'
+        direction: '111'
+        isHighSpeedIntersection: 1
+        latitude: 22.551171315231063
+        longitude: 114.06369779966558
+        name: 测试平台自动创建的名字
+        region: '42407631'
+        sceneId: 2
+        url: ''
+      method: POST
+      url: api_traffic/camera
+    validate:
+    - check: content.code
+      comparator: equals
+      expected: 0

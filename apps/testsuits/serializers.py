@@ -4,13 +4,17 @@ from .models import Testsuits
 from projects.models import Projects
 from utils import validates
 
+# class ProjectsAnotherSerialzer(serializers.ModelSerializer):
+#     pid = serializers.IntegerField(write_only=True, label="所属项目id", help_text="所属项目id",
+#                                    validators=[validates.whether_existed_project_id])
 
 class TestsuitsSerializer(serializers.ModelSerializer):
     """
     套件序列化器
     """
     project = serializers.StringRelatedField(help_text='项目名称')
-    project_id = serializers.PrimaryKeyRelatedField(queryset=Projects.objects.all(), help_text='项目ID')
+    project_id = serializers.IntegerField(write_only=True)
+    # project_id = ProjectsAnotherSerialzer(label="所属项目id", help_text="所属项目id")
 
     class Meta:
         model = Testsuits

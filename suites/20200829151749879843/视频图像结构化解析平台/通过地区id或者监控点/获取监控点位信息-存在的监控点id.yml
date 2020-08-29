@@ -1,0 +1,18 @@
+- config:
+    name: 获取监控点位信息-存在的监控点id
+    request:
+      base_url: http://172.16.1.20:8000
+- test:
+    name: 获取监控点位信息-存在的监控点id
+    request:
+      headers:
+        Content-Type: application/x-www-form-urlencoded
+        token: $token
+      json:
+        id: '80745444'
+      method: POST
+      url: /u2s2/u2s/camera/getCameraListByArea
+    validate:
+    - check: content.msg
+      comparator: equals
+      expected: success

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+import  json
 from django.conf import settings
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import permissions
@@ -33,10 +33,17 @@ class TestsuitsViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         testsuite_obj = self.get_object()
 
+        selected_interfase_id_name_list = []
+        for intercase_id  in json.loads(testsuite_obj.include):  # 遍历前置用例，组装返回前置用例id和name
+            selected_interfase_id_name = {}
+            selected_interfase_id_name["id"] = intercase_id
+            selected_interfase_id_name["name"] = Interfaces.objects.get(id=intercase_id).name
+            selected_interfase_id_name_list.append(selected_interfase_id_name)
         datas = {
             "name": testsuite_obj.name,
             "project_id": testsuite_obj.project_id,
-            "include": testsuite_obj.include
+            "include": testsuite_obj.include,
+            'selected_intercase_id_name_list':selected_interfase_id_name_list
         }
         return Response(datas)
 

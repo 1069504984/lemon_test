@@ -28,12 +28,12 @@ sys.path.append(os.path.join(BASE_DIR, "apps"))
 SECRET_KEY = 'bv89uqnh8m9il#0zkgs%57z14jtvb_c9cii$+19_dh!#%ivhmp'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS = ["外网ip", "localhost", "127.0.0.1"]
 # 设置可以用于访问项目的地址(ip、域名)
 # 默认只能使用本地地址访问项目
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["172.16.0.62"]
 
 # Application definition
 

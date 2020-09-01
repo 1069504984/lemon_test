@@ -57,6 +57,10 @@ class TestcasesViewSet(ModelViewSet):
         testcase_form_datas = testcase_request_datas.get('data')
         testcase_form_datas_list = handle_datas.handle_data6(testcase_form_datas)
 
+        # 处理用例的files类请求
+        testcase_files_datas = testcase_request_datas.get("files")
+        testcase_files_datas_list = handle_datas.handle_data6(testcase_files_datas)
+
         # 处理json数据
         # testcase_json_datas = str(testcase_request_datas.get('json'))
         testcase_json_datas = json.dumps(testcase_request_datas.get('json'), ensure_ascii=False)
@@ -103,7 +107,7 @@ class TestcasesViewSet(ModelViewSet):
             "header": testcase_headers_list,
             "variable": testcase_form_datas_list,   # form表单请求数据
             "jsonVariable": testcase_json_datas,
-
+            "filesVariable" :testcase_files_datas_list,
             "extract": testcase_extract_datas_list,
             "validate": testcase_validate_list,
             "globalVar": testcase_variables_list,   # 变量

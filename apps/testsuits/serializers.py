@@ -13,7 +13,7 @@ class TestsuitsSerializer(serializers.ModelSerializer):
     套件序列化器
     """
     project = serializers.StringRelatedField(help_text='项目名称')
-    project_id = serializers.IntegerField(write_only=True)
+    project_id = serializers.PrimaryKeyRelatedField(label='所属项目ID', help_text='所属项目ID', queryset=Projects.objects.all(), write_only=True)
     # project_id = ProjectsAnotherSerialzer(label="所属项目id", help_text="所属项目id")
 
     class Meta:
@@ -39,11 +39,10 @@ class TestsuitsSerializer(serializers.ModelSerializer):
         return testsuit
 
     def update(self, instance, validated_data):
-        if 'pid' in validated_data:
-            pid = validated_data.pop('pid')
-            validated_data['project_id'] = pid
-
-        return super().update(instance, validated_data)
+        if 'project_id' in validated_data:
+            pid = validated_data.pop('project_id')
+            validated_data['project'] = pid
+            return super().update(instance, validated_data)
 
 
 class TestsuitsRunSerializer(serializers.ModelSerializer):

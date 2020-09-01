@@ -149,9 +149,17 @@ def create_report(runner, report_name=None):
                     decode('utf-8')
                 record['meta_data']['response']['cookies'] = dict(record['meta_data']['response']['cookies'])
 
-                request_body = record['meta_data']['request']['body']
+                request_body = record['meta_data']['request'].get('body')
+                if request_body is None:
+                    continue
                 if isinstance(request_body, bytes):
-                    record['meta_data']['request']['body'] = request_body.decode('utf-8')
+                    record['meta_data']['request']['body'] = request_body.decode('utf-8',errors='ignore')
+                if "files" in record['meta_data']['request'].keys():
+                    record['meta_data']['request'].pop("files")
+                    if "body" in record['meta_data']['request'].keys():
+                            record['meta_data']['request'].pop("body")
+
+
         except Exception as e:
             continue
 

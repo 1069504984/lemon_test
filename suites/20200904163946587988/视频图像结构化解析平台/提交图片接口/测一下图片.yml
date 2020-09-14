@@ -1,0 +1,37 @@
+- config:
+    name: 测一下图片
+    request:
+      base_url: http://172.16.1.20:8000
+- test:
+    extract:
+    - token: content.token
+    name: 登录正常用例
+    parameters:
+    - username-password:
+      - - admin
+        - 123456
+      - - admin
+        - 1234567
+    request:
+      json:
+        password: $password
+        username: $username
+      method: POST
+      url: u2s2/u2s/user/login
+    validate:
+    - check: status_code
+      comparator: equals
+      expected: 200
+    variables:
+    - token: content.token
+- test:
+    name: 测一下图片
+    request:
+      files:
+        file: ${get_image()}
+      method: POST
+      url: /u2s2/u2s/image/sumbitImage
+    validate:
+    - check: content.code
+      comparator: equals
+      expected: 0

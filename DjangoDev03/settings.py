@@ -79,7 +79,7 @@ MIDDLEWARE = [
 
 # CORS_ORIGIN_ALLOW_ALL为True, 指定所有域名(ip)都可以访问后端接口, 默认为False
 CORS_ORIGIN_ALLOW_ALL = True
-
+X_FRAME_OPTIONS = 'ALLOWALL'
 # CORS_ORIGIN_WHITELIST指定能够访问后端接口的ip或域名列表
 # CORS_ORIGIN_WHITELIST = [
 #     "http://127.0.0.1:8080",
@@ -226,6 +226,13 @@ JWT_AUTH = {
     # 指定返回前端数据的处理函数
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'utils.jwt_handler.jwt_response_payload_handler',
 }
+
+
+
+# 日志配置
+BASE_LOG_DIR = os.path.join(BASE_DIR, "logs")
+if not os.path.exists(BASE_LOG_DIR):
+    os.mkdir(BASE_LOG_DIR)
 
 LOGGING = {
     'version': 1,

@@ -58,6 +58,7 @@ def bytes2str(data):
                 data[key] = value.decode()
             elif isinstance(value, dict):
                 data[key] = bytes2str(value)
+
             elif isinstance(value, list):
                 for i in range(len(value)):
                     value[i] = bytes2str(value[i])
@@ -141,7 +142,7 @@ def generate_testcase_files(instance, env, testcase_dir_path):
         with open(os.path.join(testcase_dir_path, 'debugtalk.py'),
                   mode='w',
                   encoding='utf-8') as one_file:
-            one_file.write(file_content)
+            one_file.write(debugtalk)
 
     testcase_dir_path = os.path.join(testcase_dir_path, interface_name)
     # 在项目目录下创建接口名所在文件夹
@@ -165,7 +166,7 @@ def generate_testcase_files(instance, env, testcase_dir_path):
             # config_request['config']['name'] = instance.name
             config_request['config']['request']['base_url'] = env.base_url  # 添加公共配置的公共url
             # testcases_list.append(config_request)
-            testcases_list[0] = config_request
+            testcases_list[0] = config_request   # 覆盖原有的请求配置
 
     # 如果include前置中有testcases, 那么添加到testcases_list中
     if 'testcases' in include:
@@ -211,8 +212,8 @@ def generate_debug_files(instance, env, testcase_dir_path):
     # 获取当前用例的请求信息
     request = json.loads(instance.get("request"), encoding='utf-8')
 
-    interface_name = Interfaces.objects.get(id=instance.get('interface').get("iid"))  # 接口名称
-    project_name = Projects.objects.get(id=instance.get("interface").get("pid")) # 项目名称
+    interface_name = Interfaces.objects.get(id=instance.get('interface').get("iid")).name # 接口名称
+    project_name = Projects.objects.get(id=instance.get("interface").get("pid")).name # 项目名称
 
     testcase_dir_path = os.path.join(testcase_dir_path, project_name)
     # 创建项目名所在文件夹
@@ -287,15 +288,12 @@ def create_report(runner, report_name=None):
     for item in runner.summary['details']:
         try:
             for record in item['records']:
-                record['meta_data']['response']['content'] = record['meta_data']['response']['content']. \
-                    decode('utf-8')
+                record['meta_data']['response']['content'] = record['meta_data']['response']['content']
                 record['meta_data']['response']['cookies'] = dict(record['meta_data']['response']['cookies'])
 
                 request_body = record['meta_data']['request'].get('body')
                 if request_body is None:
                     continue
-                if isinstance(request_body, bytes):
-                    record['meta_data']['request']['body'] = request_body.decode('utf-8',errors='ignore')
                 if "files" in record['meta_data']['request'].keys():
                     record['meta_data']['request'].pop("files")
                     if "body" in record['meta_data']['request'].keys():
@@ -305,9 +303,10 @@ def create_report(runner, report_name=None):
         except Exception as e:
             continue
     summary = bytes2str(runner.summary)
+    summary['top10error'], summary['successes'], summary['failures'], summary['errors'] = top10error(summary)
     summary = json.dumps(summary, ensure_ascii=False)
     # 添加top10错误表数据及其他统计数据
-    summary['top10error'], summary['successes'], summary['failures'], summary['errors'] = top10error(summary)
+
     report_name = report_name + '_' + datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')
     report_path = runner.gen_html_report(html_report_name=report_name)
 

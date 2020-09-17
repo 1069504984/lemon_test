@@ -450,5 +450,4 @@ def collection_get(obj, attr, default=None):
         logger.error('数据获取失败，{}'.format(e))
         return default or str(e)
 
-if __name__ == '__main__':
-    pass
+

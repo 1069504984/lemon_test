@@ -5,4 +5,4 @@ __pycache__
 suites
 suite
 reports
-logs
+logs/test.log

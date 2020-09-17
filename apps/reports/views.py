@@ -24,7 +24,7 @@ class ReportsViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Reports.objects.all()
     serializer_class = ReportsSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     ordering_fields = ('id', 'name')
 
     def list(self, request, *args, **kwargs):

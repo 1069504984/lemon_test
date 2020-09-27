@@ -3,6 +3,7 @@ import io
 import logging
 import json
 import re
+import shutil
 from datetime import datetime
 # from PIL import Image
 import yaml
@@ -20,7 +21,9 @@ from configures.models import Configures
 from projects.models import Projects
 from  interfaces.models import  Interfaces
 logger = logging.getLogger('test')
+import platform
 
+separator = '\\' if platform.system() == 'Windows' else '/'
 
 def timestamp_to_datetime(summary, type=True):
     if not type:
@@ -55,7 +58,12 @@ def bytes2str(data):
     if isinstance(data, dict):
         for key, value in data.items():
             if isinstance(value, bytes):
-                data[key] = value.decode()
+                try:
+                    data[key] = value.decode()
+                    if len(data[key]) > 256:
+                        data[key]=data[key][0:255]
+                except UnicodeDecodeError :
+                    data[key] = "body为图片流或者文件流，暂不显示"
             elif isinstance(value, dict):
                 data[key] = bytes2str(value)
 
@@ -63,6 +71,9 @@ def bytes2str(data):
                 for i in range(len(value)):
                     value[i] = bytes2str(value[i])
                 data[key] = value
+            elif isinstance(value,str):
+                if len(data[key]) > 1024:
+                    data[key] = data[key][0:255]
     elif isinstance(data, list):
         for i in range(len(data)):
             data[i] = bytes2str(data[i])
@@ -189,10 +200,6 @@ def generate_testcase_files(instance, env, testcase_dir_path):
               mode="w", encoding="utf-8") as one_file:
         yaml.dump(testcases_list, one_file, allow_unicode=True)
 
-
-
-
-
 def generate_debug_files(instance, env, testcase_dir_path):
     testcases_list = []
     config = {
@@ -289,15 +296,17 @@ def create_report(runner, report_name=None):
         try:
             for record in item['records']:
                 record['meta_data']['response']['content'] = record['meta_data']['response']['content']
-                record['meta_data']['response']['cookies'] = dict(record['meta_data']['response']['cookies'])
+                if record['meta_data']['response'].get('cookies') :
+                    record['meta_data']['response']['cookies'] = dict(record['meta_data']['response'].get('cookies'))
 
                 request_body = record['meta_data']['request'].get('body')
-                if request_body is None:
-                    continue
                 if "files" in record['meta_data']['request'].keys():
                     record['meta_data']['request'].pop("files")
                     if "body" in record['meta_data']['request'].keys():
                             record['meta_data']['request'].pop("body")
+                elif request_body is None:
+                    pass
+
 
 
         except Exception as e:
@@ -308,8 +317,10 @@ def create_report(runner, report_name=None):
     # 添加top10错误表数据及其他统计数据
 
     report_name = report_name + '_' + datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')
-    report_path = runner.gen_html_report(html_report_name=report_name)
 
+    report_path = runner.gen_html_report(html_report_name=report_name,
+                                        )
+    #  html_report_template=os.path.join(os.getcwd(), "templates{}extent_report_template.html".format(separator))
     with open(report_path, encoding='utf-8') as stream:
         reports = stream.read()
 
@@ -322,6 +333,7 @@ def create_report(runner, report_name=None):
         'summary': summary
     }
     report_obj = Reports.objects.create(**test_report)
+    os.remove(report_path)
     return report_obj.id
 
 def top10error(summary):
@@ -385,6 +397,7 @@ def run_testcase(instance, testcase_dir_path,debug=False):
     # runner.run(testcase_dir_path)
     try:
         runner.run(testcase_dir_path)
+        shutil.rmtree(testcase_dir_path)
     except ParamsError:
         logger.error("用例参数有误")
         data = {
@@ -395,10 +408,14 @@ def run_testcase(instance, testcase_dir_path,debug=False):
     runner.summary = timestamp_to_datetime(runner.summary, type=False)
     # 运行用例
     # 原内容为字节类型不能序列化,需要转换。转换后作为响应返回前端
-    summary = bytes2str(runner.summary)
+    summary = runner.summary
     try:
-        report_name = instance.name
+        if isinstance(instance, dict):
+            report_name = instance.get("name")
+        else:
+            report_name = instance.name
     except Exception as e:
+        print(e)
         report_name = '被遗弃的报告' + '-' + datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')
     if debug == True :
         return summary
@@ -460,6 +477,8 @@ def tidy_tree_data(data, tree_list, parent_path=None):
             node = {}
             if isinstance(v, (str, int, float, bool)):
                 node['title'] = str(i) + '-->' + python2js(v)
+                if len(node['title']) > 1024:
+                    node['title'] = node['title'][0:255]
                 node['expect'] = v
             else:
                 node['title'] = i
@@ -483,6 +502,8 @@ def tidy_tree_data(data, tree_list, parent_path=None):
                 # 列表或字典 递归解释
                 node['children'] = tidy_tree_data(value, [], parent_path=sub_parent_path)
                 node['title'] = key if node['children'] else key + '-->' + python2js(value)
+                if len(node['title']) > 1024:
+                    node['title'] = node['title'][0:255]
             else:
                 if key in ['text', 'content']:
                     '''
@@ -497,15 +518,24 @@ def tidy_tree_data(data, tree_list, parent_path=None):
                         if isinstance(value, (list, dict)):
                             node['children'] = tidy_tree_data(value, [], parent_path=sub_parent_path)
                             node['title'] = key if node['children'] else key + '-->[]'
+                            if len(node['title']) > 1024:
+                                node['title'] = node['title'][0:255]
                         else:
                             node['title'] = key + '-->' + python2js(value)
+                            if len(node['title']) > 1024:
+                                node['title'] = node['title'][0:255]
                             node['expect'] = value
+
                     except Exception:
                         node['title'] = key + '-->' + python2js(value)
                         node['expect'] = value
+                        if len(node['title']) > 1024:
+                            node['title'] = node['title'][0:255]
                 else:
                     # 字串直接输出
                     node['title'] = key + '-->' + python2js(value)
+                    if len(node['title']) > 1024:
+                        node['title'] = node['title'][0:255]
                     node['expect'] = value
             # 保存本数据节点的路径(父路径.本节点路径)
             node['path'] = key if parent_path is None else parent_path + '.' + key

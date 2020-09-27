@@ -284,3 +284,7 @@ SUITES_DIR = os.path.join(BASE_DIR, 'suites')
 
 # 1. 创建STATIC_ROOT, 存放静态文件的目录
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+
+EMAIL_SEND_USERNAME = '1069504984@qq.com'  # 定时任务报告发送邮箱，支持163,qq,sina,企业qq邮箱等，注意需要开通smtp服务
+EMAIL_SEND_PASSWORD = 'hgjwdyonvegybgai'     # 邮箱密码

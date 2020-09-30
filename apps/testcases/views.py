@@ -186,7 +186,6 @@ class TestcasesViewSet(ModelViewSet):
             'summary': summary
         }
         common.bytes2str(return_info)
-        print(return_info)
         # 返回结果
         return Response(return_info)
 

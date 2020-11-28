@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import sys
 import datetime
+import djcelery
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,7 +50,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'django_filters',
     'corsheaders',
-
+    'djcelery',
     # 应用名.apps.应用名首字母大写Config
     # 'apps.projects.apps.ProjectsConfig',
     'projects.apps.ProjectsConfig',
@@ -288,3 +289,29 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 EMAIL_SEND_USERNAME = '1069504984@qq.com'  # 定时任务报告发送邮箱，支持163,qq,sina,企业qq邮箱等，注意需要开通smtp服务
 EMAIL_SEND_PASSWORD = 'hgjwdyonvegybgai'     # 邮箱密码
+djcelery.setup_loader()
+
+CELERY_ENABLE_UTC = True
+# CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_TIMEZONE = TIME_ZONE
+# CELERY_ENABLE_UTC = False
+# # CELERY_TIMEZONE = 'Asia/Shanghai'
+
+BROKER_URL = 'amqp://guest@localhost//'
+
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+# CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = 'django-db'# 任务元数据保存到数据库中
+
+CELERY_ACCEPT_CONTENT = ['application/json']
+
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_RESULT_SERIALIZER = 'json'
+
+# CELERY_TASK_RESULT_EXPIRES = 86400  # celery任务执行结果的超时时间， 此配置注释后，任务结果不会定时清理
+
+CELERYD_CONCURRENCY = 1  # celery worker的并发数
+
+CELERYD_MAX_TASKS_PER_CHILD = 100  # 每个worker执行了多少任务就会销毁

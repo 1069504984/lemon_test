@@ -1,11 +1,12 @@
 import json
+import logging
 import os
 import time
 from datetime import datetime
 
 from django.conf import settings
 from rest_framework.viewsets import ModelViewSet
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -15,7 +16,7 @@ from interfaces.models import Interfaces
 from envs.models import Envs
 from .serializers import TestcasesSerializer, TestcasesRunSerializer,TestcasesdebugSerializer
 from utils import handle_datas, common
-
+logger = logging.getLogger('test')
 
 class TestcasesViewSet(ModelViewSet):
     """
@@ -117,6 +118,8 @@ class TestcasesViewSet(ModelViewSet):
             "teardownHooks": testcase_teardown_hooks_datas_list,
         }
         return Response(datas)
+
+
 
     @action(methods=['post'], detail=True)
     def run(self, request, *args, **kwargs):

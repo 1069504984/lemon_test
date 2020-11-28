@@ -4,3 +4,4 @@
 2020-02-18 13:46:44,211 - [ERROR] - test - [msg]ç¨ä¾åæ°æè¯¯ - [common.py:190 ]
 2020-02-18 21:54:50,504 - [ERROR] - test - [msg]用例参数有误 - [common.py:191 ]
 
+2020-11-28 14:24:38,983 - [INFO] - test - [msg]复制用例信息：{'name': '登录正常用例', 'include': '{"config":1,"testcases":[]}', 'author': '李开', 'request': '{"test":{"name":"登录正常用例","request":{"url":"u2s2/u2s/user/login","method":"POST","json":{"username":"admin","password":"b06485414104b43ce22206584498f5119c1d939a97cc93173f32c5f09114523b"}},"variables":[{"token":"content.token"}],"extract":[{"token":"json.token"}],"validate":[{"check":"status_code","expected":200,"comparator":"equals"},{"check":"json.msg","expected":"success","comparator":"equals"},{"check":"json.code","expected":0,"comparator":"equals"},{"check":"json.userinfo.userName","expected":"admin","comparator":"equals"}]}}', 'interface': {'pid': 1, 'iid': 1}} - [views.py:125 ]

@@ -1,6 +1,7 @@
 import os
 import json
-
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import permissions
@@ -23,7 +24,7 @@ class ReportsViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Reports.objects.all()
     serializer_class = ReportsSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     ordering_fields = ('id', 'name')
 
     def list(self, request, *args, **kwargs):
@@ -59,12 +60,18 @@ class ReportsViewSet(mixins.RetrieveModelMixin,
 
         return response
 
-    def retrieve(self, request, *args, **kwargs):
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     datas = serializer.data
+    #     try:
+    #         datas['summary'] = json.loads(datas['summary'], encoding='utf-8')
+    #     except Exception as e:
+    #         pass
+    #     return Response(datas)
+    # @csrf_exempt
+    def retrieve(self, request,*args,**kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        datas = serializer.data
-        try:
-            datas['summary'] = json.loads(datas['summary'], encoding='utf-8')
-        except Exception as e:
-            pass
-        return Response(datas)
+        html = instance.html
+        return render(request,"report.html",{"report":html
+                                             })

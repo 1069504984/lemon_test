@@ -1,20 +1,22 @@
 import json
+import logging
 import os
-import datetime
+import time
 from datetime import datetime
 
 from django.conf import settings
 from rest_framework.viewsets import ModelViewSet
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from utils.common import tidy_tree_data
 from .models import Testcases
 from interfaces.models import Interfaces
 from envs.models import Envs
-from .serializers import TestcasesSerializer, TestcasesRunSerializer
+from .serializers import TestcasesSerializer, TestcasesRunSerializer,TestcasesdebugSerializer
 from utils import handle_datas, common
-
+logger = logging.getLogger('test')
 
 class TestcasesViewSet(ModelViewSet):
     """
@@ -117,6 +119,8 @@ class TestcasesViewSet(ModelViewSet):
         }
         return Response(datas)
 
+
+
     @action(methods=['post'], detail=True)
     def run(self, request, *args, **kwargs):
         # 1. 获取模型类对象
@@ -136,8 +140,63 @@ class TestcasesViewSet(ModelViewSet):
         # 4. 运行用例
         return common.run_testcase(instance, testcase_dir_path)
 
+    @action(methods=['post'], detail=True)
+    def debug(self, request, *args, **kwargs):
+        # 1. 获取模型类对象
+        # env =Envs.objects.get(id=request.data["env_id"])
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datas = serializer.validated_data
+        env = Envs.objects.get(id=datas.get('env_id'))
+
+
+        # 3. 生成yaml测试用例文件
+        testcase_dir_path = os.path.join(settings.BASE_DIR, 'suite', 'debug_{}'.format(time.time()))
+
+        common.generate_debug_files(request.data, env, testcase_dir_path)  # 传入接口对象，环境 ，用例目录
+        # 4. 运行用例
+        summary=common.run_testcase(request.data, testcase_dir_path,debug=True)
+        # 返回用例中全部请求的结果树数据
+        tree = []
+        case_metas = []  # 保存用例的元数据，包括运行是否成功，断言结果等
+        for record in summary['details'][0]['records']:
+            # 调试结果树增加请求信息
+            result = [
+                {
+                    'title': '请求(仅展示,匆提取)',
+                    'expand': True,
+                    'children': tidy_tree_data(record['meta_data']['request'], [])
+                },
+                {
+                    'title': '响应',
+                    'expand': True,
+                    'children': tidy_tree_data(record['meta_data']['response'], [])
+                }
+            ]
+            case_run_info = {}
+            case_run_info['flag'] = record['status'] == 'success'
+            case_run_info['attachment'] = record['attachment']
+            case_run_info['validators'] = record['meta_data']['validators']
+            case_run_info['name'] = record['name']
+            # 此为附加信息,页面展示时要先取出该数据
+            case_metas.append(case_run_info)
+            tree.append(result)
+
+        return_info = {
+            'tree': tree,
+            'case_metas': case_metas,
+            'summary': summary
+        }
+        common.bytes2str(return_info)
+        # 返回结果
+        return Response(return_info)
+
+
     def get_serializer_class(self):
         if self.action == "run":
             return TestcasesRunSerializer
+        elif self.action == "debug":
+            return  TestcasesdebugSerializer
         else:
             return self.serializer_class
